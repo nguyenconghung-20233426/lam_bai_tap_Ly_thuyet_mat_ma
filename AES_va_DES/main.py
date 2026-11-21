@@ -3,7 +3,7 @@ def Feistel_function(input_block, subkey):
     left_half = input_block[:len(input_block)//2]
     right_half = input_block[len(input_block)//2:]
 return bytes([b ^ subkey for b in right_half]) + left_half
-def expand_32_to_48(input_block):
+def expand_32_to_48(    input_block):
     # Expansion permutation table for DES
     expansion_table = [
         32, 1, 2, 3, 4, 5,
