@@ -27,5 +27,12 @@ def expand_32_to_48(    input_block):
         
         expanded.extend([left_bit] + middle_bits + [right_bit])
     return expanded
-
+def permute_bitwise(value, table, in_bits):
+    result = 0
+    for pos in table:
+        # Lấy bit tại vị trí pos (đếm từ trái sang, bắt đầu từ 1)
+        bit = (value >> (in_bits - pos)) & 1
+        # Đẩy bit đó vào kết quả mới
+        result = (result << 1) | bit
+    return result
     
