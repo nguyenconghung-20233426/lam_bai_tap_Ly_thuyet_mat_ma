@@ -5,7 +5,7 @@ def Feistel_function(input_block, subkey):
 return bytes([b ^ subkey for b in right_half]) + left_half
 def expand_32_to_48(    input_block):
     # Expansion permutation table for DES
-    expansion_table = [
+    #expansion_table = 
         32, 1, 2, 3, 4, 5,
         4, 5, 6, 7, 8, 9,
         8, 9, 10, 11, 12, 13,
@@ -14,10 +14,18 @@ def expand_32_to_48(    input_block):
         20, 21, 22, 23, 24, 25,
         24, 25, 26, 27, 28, 29,
         28, 29, 30, 31, 32
-    ]
-    expanded_block = bytearray()
-    for i in expansion_table:
-        expanded_block.append(input_block[i - 1])
-    return bytes(expanded_block)
+    expanded = []
+    for i in range(8):
+        # Vị trí 4 bit gốc của nhóm thứ i
+        start = i * 4
+        # Bit mượn từ cuối nhóm trước (dùng % 32 để bit 0 mượn được bit 31)
+        left_bit = R[(start - 1) % 32]
+        # 4 bit ở giữa
+        middle_bits = R[start : start + 4]
+        # Bit mượn từ đầu nhóm sau (dùng % 32 để bit 31 mượn được bit 0)
+        right_bit = R[(start + 4) % 32]
+        
+        expanded.extend([left_bit] + middle_bits + [right_bit])
+    return expanded
 
     
