@@ -2,7 +2,7 @@
 
 def hex_to_bits(hex_str):
     val = int(hex_str, 16)
-    return [int b for b in f"{val:0674b}"]
+    return [int (b) for b in f"{val:064b}"]
 
 def Feistel_function(input_block, subkey):
     # Split the input block into two halves
