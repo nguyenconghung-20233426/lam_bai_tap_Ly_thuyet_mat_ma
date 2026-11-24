@@ -11,7 +11,7 @@ FP = [40, 8, 48, 16, 56, 24, 64, 32, 39, 7, 47, 15, 55, 23, 63, 31,
 P = [16, 7, 20, 21, 29, 12, 28, 17, 1, 15, 23, 26, 5, 18, 31, 10,
      2, 8, 24, 14, 32, 27, 3, 9, 19, 13, 30, 6, 22, 11, 4, 25]
 
-S_BOX = [
+DES_S_BOX = [
     [[14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7],
      [0, 15, 7, 4, 14, 2, 13, 1, 10, 6, 12, 11, 9, 5, 3, 8],
      [4, 1, 14, 8, 13, 6, 2, 11, 15, 12, 9, 7, 3, 10, 5, 0],
@@ -112,4 +112,27 @@ def des_encrypt_trace(plain_hex, key_hex):
     logs.append("-" * 65)
     logs.append(f"Bản mã cuối cùng (Sau FP): {cipher_hex}\n")
     return cipher_hex, "\n".join(logs)
-   
+
+   #Thuật toán AES_128
+   # ==============================================================================
+def gmul(a, b):
+    p = 0
+    for i in range(8):
+        if b & 1:
+            p ^= a
+        hi = a & 0x80
+        a = (a << 1) & 0xff
+        if hi:
+            a ^= 0x1b
+        b >>= 1
+    return p
+def gf_inverse(a):
+    if a == 0:
+        return 0
+    res, base, exp = 1, a, 254
+    while exp > 0:
+        if exp & 1:
+            res = gmu(res, base)
+        base = gmul(base, bae)
+        exp >>= 1
+    return res
