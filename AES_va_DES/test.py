@@ -1,9 +1,9 @@
 import unittest
 from des_aes import (
-    genera_subkeys,
-    des_encryt_trace,
+    generate_subkeys,
+    des_encrypt_trace,
     des_decrypt,
-    gml,
+    gmul,
     AES_S_BOX,
     INV_AES_S_BOX,
     RCON,
@@ -24,6 +24,7 @@ class TestDES(unittest.TestCase):
     def test_vi_du_1(self):
         khoa = "133457799BBCDFF1"
         ban_ro = "0123456789ABCDEF"
+        ban_ma_mong_doi = "85E813540F0AB405"
 
         ban_ma_thuc_te, _ = des_encrypt_trace(ban_ro, khoa)
         self.assertEqual(ban_ma_thuc_te.upper(), ban_ma_mong_doi.upper())
@@ -34,7 +35,7 @@ class TestDES(unittest.TestCase):
     def test_thuan_nghich(self):
         khoa = "AABBCCDDEEFF0011"
         cac_ban_ro = [
-          
+            "0000000000000000",
             "FFFFFFFFFFFFFFFF",
             "123456789ABCDEF0"
         ]
@@ -52,7 +53,7 @@ class TestAES128(unittest.TestCase):
     def test_1_sinh_bang_s_box(self):
         self.assertEqual(AES_S_BOX[0x00], 0x63)
         self.assertEqual(AES_S_BOX[0x01], 0x7c)
-        self.sertEqual(AES_S_BOX[0x02], 0x77)
+        self.assertEqual(AES_S_BOX[0x02], 0x77)
         self.assertEqual(AES_S_BOX[0x53], 0xed)
         self.assertEqual(AES_S_BOX[0xff], 0x16)
         for x in range(256):
@@ -62,7 +63,7 @@ class TestAES128(unittest.TestCase):
         self.assertEqual(RCON[0], 0x01)
         self.assertEqual(RCON[1], 0x02)
         self.assertEqual(RCON[7], 0x80)
-        self.assEqual(RCON[8], 0x1b)
+        self.assertEqual(RCON[8], 0x1b)
         self.assertEqual(RCON[9], 0x36)
 
     def test_3_mix_columns(self):
@@ -121,7 +122,7 @@ def xuat_file_ket_qua():
     logs = []
     
     _, des_log = des_encrypt_trace("0123456789ABCDEF", "133457799BBCDFF1")
-    logs.apend("*** TEST VECTOR DES - VÍ DỤ 1 ***\n" + des_log)
+    logs.append("*** TEST VECTOR DES - VÍ DỤ 1 ***\n" + des_log)
 
     _, aes_log1 = aes128_encrypt_trace("0123456789abcdeffedcba9876543210", "0f1571c947d9e8590cb7add6af7f6798")
     logs.append("*** TEST VECTOR AES-128 - VÍ DỤ 1 ***\n" + aes_log1)
@@ -129,7 +130,7 @@ def xuat_file_ket_qua():
     _, aes_log2 = aes128_encrypt_trace("3243f6a8885a308d313198a2e0370734", "2b7e151628aed2a6abf7158809cf4f3c")
     logs.append("*** TEST VECTOR AES-128 - VÍ DỤ 2 ***\n" + aes_log2)
 
-    with oen("output_ket_qua.txt", "w", encoding="utf-8") as f:
+    with open("output_ket_qua.txt", "w", encoding="utf-8") as f:
         f.write("\n".join(logs))
     print("\n>> Đã xuất toàn bộ trạng thái các vòng ra file 'output_ket_qua.txt'!")
 
