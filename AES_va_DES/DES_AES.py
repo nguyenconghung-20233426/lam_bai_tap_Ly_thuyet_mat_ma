@@ -88,11 +88,11 @@ def feistel(R, subkey):
         chunk = xored[i*6:(i+1)*6]
         row = (chunk[0] << 1) + chunk[5]
         col = (chunk[1] << 3) + (chunk[2] << 2) + (chunk[3] << 1) + chunk[4]
-        val = S_BOX[i][row][col]
+        val = DES_S_BOX[i][row][col]
         sbox_out.extend([(val >> shift) & 1 for shift in (3, 2, 1, 0)])
     return permute(sbox_out, P)
 def des_encrypt_trace(plain_hex, key_hex):
-    
+    logs = []
     bits = hex_to_bits(plain_hex)
     ip_bits = permute(bits, IP)
     L, R = ip_bits[:32], ip_bits[32:]
@@ -138,8 +138,6 @@ def gf_inverse(a):
         base = gmul(base, base)
         exp >>= 1
     return res
-AES_S_BOX = generate_sbox()
-RCON = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36]
 def generate_sbox():
     sbox = []
     rotl = lambda x, s: ((x << s) | (x >> (8 - s))) & 0xff
@@ -147,6 +145,9 @@ def generate_sbox():
         inv = gf_inverse(i)
         sbox.append(inv ^ rotl(inv, 1) ^ rotl(inv, 2) ^ rotl(inv, 3) ^ rotl(inv, 4) ^ 0x63)
     return sbox
+AES_S_BOX = generate_sbox()
+RCON = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36]
+
 def key_expansion(key_bytes):
     w = [list(key_bytes[i:i+4]) for i in range(0, 16, 4)]
     for i in range(4, 44):
