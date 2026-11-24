@@ -238,15 +238,15 @@ def inv_mix_columns(s):
         res[i+3] = gmul(0x0b, s[i]) ^ gmul(0x0d, s[i+1]) ^ gmul(0x09, s[i+2]) ^ gmul(0x0e, s[i+3])
     return res
 
-def aes128_decrypt(ciper_hex, key_hex):
-    state = list(bytesfromhex(cipher_hex))
+def aes128_decrypt(cipher_hex, key_hex):
+    state = list(bytes.fromhex(cipher_hex))
     round_keys = key_expansion(list(bytes.fromhex(key_hex)))
-    state = add_rond_key(state, round_keys[10])
-    stte = inv_shift_rows(state)
+    state = add_round_key(state, round_keys[10])
+    state = inv_shift_rows(state)
     state = [INV_AES_S_BOX[b] for b in state]
     for r in range(9, 0, -1):
         state = add_round_key(state, round_keys[r])
-        state = inv_mix_columns(stte)
+        state = inv_mix_columns(state)
         state = inv_shift_rows(state)
         state = [INV_AES_S_BOX[b] for b in state]
     stte = add_round_key(state, round_keys[0])
