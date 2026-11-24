@@ -63,8 +63,6 @@ def hex_to_bits(hex_str):
 def bits_to_hex(bits):
     val = int("".join(map(str, bits)), 2)
     return f"{val:0{len(bits)//4}X}"
-
-return bytes([b ^ subkey for b in right_half]) + left_half
 def expand_32_to_48(R):
     expanded = []
     for i in range(8):
@@ -83,14 +81,35 @@ def generate_subkeys(key_bits):
         subkeys.append(permute(C + D, PC2))
     return subkeys
 def feistel(R, subkey):
-    expanded = epand_32_to_48(R)
+    expanded = expand_32_to_48(R)
     xored = [a ^ b for a, b in zip(expanded, subkey)]
     sbox_out = []
     for i in range(8):
         chunk = xored[i*6:(i+1)*6]
-        row = (chunk[0] < < 1) + chunk[5]
-        col = (chunk[1] < < 3) + (chunk[2] < < 2) + (chunk[3] << 1) + chunk[4]
+        row = (chunk[0] << 1) + chunk[5]
+        col = (chunk[1] << 3) + (chunk[2] << 2) + (chunk[3] << 1) + chunk[4]
         val = S_BOX[i][row][col]
-        sbox_out.extend([(val >> shift) & 1 for shift in (3, 3, 1, 0)])
+        sbox_out.extend([(val >> shift) & 1 for shift in (3, 2, 1, 0)])
     return permute(sbox_out, P)
+def des_encrypt_trace(plain_hex, key_hex):
+    
+    bits = hex_to_bits(plain_hex)
+    ip_bits = permute(bits, IP)
+    L, R = ip_bits[:32], ip_bits[32:]
+    logs.append(f"Sau hoán vị IP     : L0 = {bits_to_hex(L)} | R0 = {bits_to_hex(R)}")
+    logs.append("-" * 65)
+
+    subkeys = generate_subkeys(hex_to_bits(key_hex))
+    for r in range(16):
+        f_res = feistel(R, subkeys[r])
+        new_L = R
+        new_R = [a ^ b for a, b in zip(L, f_res)]
+        L, R = new_L, new_R
+        logs.append(f"Vòng {r+1:02d} | K{r+1:02d}={bits_to_hex(subkeys[r])} | L={bits_to_hex(L)} | R={bits_to_hex(R)}")
+
+    cipher_bits = permute(R + L, FP)
+    cipher_hex = bits_to_hex(cipher_bits)
+    logs.append("-" * 65)
+    logs.append(f"Bản mã cuối cùng (Sau FP): {cipher_hex}\n")
+    return cipher_hex, "\n".join(logs)
    
