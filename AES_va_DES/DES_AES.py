@@ -112,7 +112,17 @@ def des_encrypt_trace(plain_hex, key_hex):
     logs.append("-" * 65)
     logs.append(f"Bản mã cuối cùng (Sau FP): {cipher_hex}\n")
     return cipher_hex, "\n".join(logs)
-
+def des_decrypt(cipher_hex, key_hex):
+    bits = hex_to_bits(cipher_hex)
+    ip_bits = permute(bits, IP)
+    L, R = ip_bits[:32], ip_bits[32:]
+    # Giải mã DES dùng khóa con đảo ngược từ K16 về K1
+    subkeys = generate_subkeys(hex_to_bits(key_hex))[::-1]
+    for r in range(16):
+        f_res = feistel(R, subkeys[r])
+        L, R = R, [a ^ b for a, b in zip(L, f_res)]
+    plain_bits = permute(R + L, FP)
+    return bits_to_hex(plain_bits)
    #Thuật toán AES_128
    # ==============================================================================
 def gmul(a, b):
@@ -208,3 +218,36 @@ def aes128_encrypt_trace(plain_hex, key_hex):
     logs.append("-" * 82)
     logs.append(f"Bản mã cuối cùng (Ciphertext): {cipher_hex}\n")
     return cipher_hex, "\n".join(logs)
+INV_AES_S_BOX = [AES_S_BOX.index(i) for i in range(256)]
+
+def inv_shift_rows(s):
+    return [
+        s[0], s[13], s[10], s[7],
+        s[4], s[1], s[14], s[11],
+        s[8], s[5], s[2], s[15],
+        s[12], s[9], s[6], s[3]
+    ]
+
+def inv_mix_columns(s):
+    res = [0] * 16
+    for c in range(4):
+        i = c * 4
+        res[i]   = gmul(0x0e, s[i]) ^ gmul(0x0b, s[i+1]) ^ gmul(0x0d, s[i+2]) ^ gmul(0x09, s[i+3])
+        res[i+1] = gmul(0x09, s[i]) ^ gmul(0x0e, s[i+1]) ^ gmul(0x0b, s[i+2]) ^ gmul(0x0d, s[i+3])
+        res[i+2] = gmul(0x0d, s[i]) ^ gmul(0x09, s[i+1]) ^ gmul(0x0e, s[i+2]) ^ gmul(0x0b, s[i+3])
+        res[i+3] = gmul(0x0b, s[i]) ^ gmul(0x0d, s[i+1]) ^ gmul(0x09, s[i+2]) ^ gmul(0x0e, s[i+3])
+    return res
+
+def aes128_decrypt(ciper_hex, key_hex):
+    state = list(bytesfromhex(cipher_hex))
+    round_keys = key_expansion(list(bytes.fromhex(key_hex)))
+    state = add_rond_key(state, round_keys[10])
+    stte = inv_shift_rows(state)
+    state = [INV_AES_S_BOX[b] for b in state]
+    for r in range(9, 0, -1):
+        state = add_round_key(state, round_keys[r])
+        state = inv_mix_columns(stte)
+        state = inv_shift_rows(state)
+        state = [INV_AES_S_BOX[b] for b in state]
+    stte = add_round_key(state, round_keys[0])
+    return bytes_to_hex(state)
