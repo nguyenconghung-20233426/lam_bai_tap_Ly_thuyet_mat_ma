@@ -126,6 +126,8 @@ def gmul(a, b):
             a ^= 0x1b
         b >>= 1
     return p
+def bytes_to_hex(byte_list):
+    return "".join(f"{b:02X}" for b in byte_list)
 def gf_inverse(a):
     if a == 0:
         return 0
