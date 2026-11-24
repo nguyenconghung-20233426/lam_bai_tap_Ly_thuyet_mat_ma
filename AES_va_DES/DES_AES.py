@@ -132,7 +132,76 @@ def gf_inverse(a):
     res, base, exp = 1, a, 254
     while exp > 0:
         if exp & 1:
-            res = gmu(res, base)
-        base = gmul(base, bae)
+            res = gmul(res, base)
+        base = gmul(base, base)
         exp >>= 1
     return res
+AES_S_BOX = generate_sbox()
+RCON = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36]
+def generate_sbox():
+    sbox = []
+    rotl = lambda x, s: ((x << s) | (x >> (8 - s))) & 0xff
+    for i in range(256):
+        inv = gf_inverse(i)
+        sbox.append(inv ^ rotl(inv, 1) ^ rotl(inv, 2) ^ rotl(inv, 3) ^ rotl(inv, 4) ^ 0x63)
+    return sbox
+def key_expansion(key_bytes):
+    w = [list(key_bytes[i:i+4]) for i in range(0, 16, 4)]
+    for i in range(4, 44):
+        temp = list(w[i - 1])
+        if i % 4 == 0:
+            temp = [AES_S_BOX[b] for b in (temp[1:] + temp[:1])]  # <-- Gọi AES_S_BOX
+            temp[0] ^= RCON[i // 4 - 1]
+        w.append([w[i - 4][j] ^ temp[j] for j in range(4)])
+    return [sum(w[4*r:4*(r+1)], []) for r in range(11)]
+
+def add_round_key(state, round_key):
+    return [s ^ k for s, k in zip(state, round_key)]
+def shift_rows(s):
+    return [
+        s[0], s[5], s[10], s[15],
+        s[4], s[9], s[14], s[3],
+        s[8], s[13], s[2], s[7],
+        s[12], s[1], s[6], s[11]
+    ]
+
+def mix_columns(s):
+    res = [0] * 16
+    for c in range(4):
+        i = c * 4
+        res[i]   = gmul(0x02, s[i]) ^ gmul(0x03, s[i+1]) ^ s[i+2] ^ s[i+3]
+        res[i+1] = s[i] ^ gmul(0x02, s[i+1]) ^ gmul(0x03, s[i+2]) ^ s[i+3]
+        res[i+2] = s[i] ^ s[i+1] ^ gmul(0x02, s[i+2]) ^ gmul(0x03, s[i+3])
+        res[i+3] = gmul(0x03, s[i]) ^ s[i+1] ^ s[i+2] ^ gmul(0x02, s[i+3])
+    return res
+
+def aes128_encrypt_trace(plain_hex, key_hex):
+    logs = []
+    state = list(bytes.fromhex(plain_hex))
+    round_keys = key_expansion(list(bytes.fromhex(key_hex)))
+
+    state = add_round_key(state, round_keys[0])
+    logs.append(f"Vòng 00 | RoundKey={bytes_to_hex(round_keys[0])} | State={bytes_to_hex(state)}")
+    logs.append("-" * 82)
+
+    for r in range(1, 10):
+        state = [AES_S_BOX[b] for b in state]  
+        sub_hex = bytes_to_hex(state)
+        state = shift_rows(state)
+        shift_hex = bytes_to_hex(state)
+        state = mix_columns(state)
+        mix_hex = bytes_to_hex(state)
+        state = add_round_key(state, round_keys[r])
+        logs.append(f"Vòng {r:02d} | SubBytes={sub_hex} | ShiftRows={shift_hex}")
+        logs.append(f"        | MixCols ={mix_hex} | AddRKey  ={bytes_to_hex(state)}")
+
+    state = [AES_S_BOX[b] for b in state]  
+    sub_hex = bytes_to_hex(state)
+    state = shift_rows(state)
+    shift_hex = bytes_to_hex(state)
+    state = add_round_key(state, round_keys[10])
+    cipher_hex = bytes_to_hex(state)
+    logs.append(f"Vòng 10 | SubBytes={sub_hex} | ShiftRows={shift_hex}")
+    logs.append("-" * 82)
+    logs.append(f"Bản mã cuối cùng (Ciphertext): {cipher_hex}\n")
+    return cipher_hex, "\n".join(logs)
