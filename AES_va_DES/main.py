@@ -60,11 +60,10 @@ SHIFT = [1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1]
 def hex_to_bits(hex_str):
     val = int(hex_str, 16)
     return [int (b) for b in f"{val:064b}"]
+def bits_to_hex(bits):
+    val = int("".join(map(str, bits)), 2)
+    return f"{val:0{len(bits)//4}X}"
 
-def Feistel_function(input_block, subkey):
-    # Split the input block into two halves
-    left_half = input_block[:len(input_block)//2]
-    right_half = input_block[len(input_block)//2:]
 return bytes([b ^ subkey for b in right_half]) + left_half
 def expand_32_to_48(R):
     expanded = []
@@ -74,4 +73,24 @@ def expand_32_to_48(R):
     return expanded
 def permute(bits, table):
     return [bits[i - 1] for i in table]
+def generate_subkeys(key_bits):
+    k56 = permute(key_bits, PC1)
+    C, D = k56[:28], k56[28:]
+    subkeys = []
+    for s in SHIFT:
+        C = C[s:] + C[:s]
+        D = D[s:] + D[:s]
+        subkeys.append(permute(C + D, PC2))
+    return subkeys
+def feistel(R, subkey):
+    expanded = epand_32_to_48(R)
+    xored = [a ^ b for a, b in zip(expanded, subkey)]
+    sbox_out = []
+    for i in range(8):
+        chunk = xored[i*6:(i+1)*6]
+        row = (chunk[0] < < 1) + chunk[5]
+        col = (chunk[1] < < 3) + (chunk[2] < < 2) + (chunk[3] << 1) + chunk[4]
+        val = S_BOX[i][row][col]
+        sbox_out.extend([(val >> shift) & 1 for shift in (3, 3, 1, 0)])
+    return permute(sbox_out, P)
    
