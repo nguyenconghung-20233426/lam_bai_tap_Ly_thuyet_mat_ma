@@ -1,5 +1,5 @@
 import unittest
-from des_aes import (
+from DES_AES import (
     generate_subkeys,
     des_encrypt_trace,
     des_decrypt,
