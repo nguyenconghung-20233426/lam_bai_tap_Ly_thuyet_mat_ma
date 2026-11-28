@@ -24,3 +24,14 @@ void permute(const int *in_bits, int *out_bits, const int *table, int table_len)
 void initial_permutation(const int in_64[64], int out_64[64]) {
     permute(in_64, out_64, IP, 64);
 }
+void initial_permutation(const int in_64[64], int out_64[64]) {
+    permute(in_64, out_64, IP, 64);
+}
+
+void final_permutation(const int in_64[64], int out_64[64]) {
+    permute(in_64, out_64, FP, 64);
+}
+
+void p_box_permutation(const int in_32[32], int out_32[32]) {
+    permute(in_32, out_32, P, 32);
+}
