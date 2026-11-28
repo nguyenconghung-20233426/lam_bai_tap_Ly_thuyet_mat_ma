@@ -22,12 +22,13 @@ void sbox_substitution(const int in_48[48], int out_32[32]);
 void left_shift_bits(int *bits, int len, int shift);
 void generate_subkeys(const int key_bits[64], int subkeys[16][48]);
 // feistel.c: Hàm Feistel 1 vòng
-void feistel_function(const inst R[32], const int subkey[48], int out_32[32]);
+// feistel.c: Hàm Feistel 1 vòng
+void feistel_function(const int R[32], const int subkey[48], int out_32[32]);
 
 // des_encrypt.c: Mã hóa DES
-void desencrypt(const char plain_hex[16], const char key_hex[16], char out_ciher[17], int print_trace);
+void des_encrypt(const char plain_hex[16], const char key_hex[16], char out_cipher[17], int print_trace);
 
 // des_decrypt.c: Giải mã DES
-void desdecrypt(const char cipher_hex[16], const char key_hex[16], char out_plin[17], int print_trace);
+void des_decrypt(const char cipher_hex[16], const char key_hex[16], char out_plain[17], int print_trace);
 
 #endif
